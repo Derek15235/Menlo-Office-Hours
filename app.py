@@ -4,14 +4,19 @@ from models import *
 
 app = Flask(__name__)
 
-# TODO: Change the secret key
-app.secret_key = "Change Me"
+app.secret_key = "l655TiS4OGaxoO17Fg=="
 
-# TODO: Fill in methods and routes
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("sign_in.html")
+    
+@app.route("/sign-up")
+def sign_up():
+    if request.method == "GET":
+        return render_template("sign_up.html") 
 
-@app.before_first_request
-def setup():
-    init_db()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
+
