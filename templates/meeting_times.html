@@ -1,0 +1,24 @@
+{%extends "student_base.html"%}
+{%block title%}Schedule Times{%endblock%}
+{%block head%}Available Meetings{%endblock%}
+{%block content%}
+    <form action="#" method="POST">
+        <div class="row">
+            <div class="col-md-12">
+                <input type="text" name="description" id="description" placeholder="Description (Optional)">
+            </div>
+        </div>
+        <div class="row">
+            {% for date in dates %}
+                <div class="col-md-3">
+                    <div class="date-card">
+                        <p>{{date}}</p>
+                        {% for meeting in dates[date] %}
+                            <button type="submit" id="meeting_id" name="meeting_id" value={{meeting.id}} class="btn">{{meeting.time}}</button>
+                        {%endfor%}
+                    </div>
+                </div>
+            {%endfor%}
+        </div>
+    </form>
+{%endblock%}

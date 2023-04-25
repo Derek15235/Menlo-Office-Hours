@@ -2,5 +2,16 @@
 {%block title%}Your Meetings{%endblock%}
 {%block head%}Your Meetings{%endblock%}
 {%block content%}
-
+    <div class="row">
+        {%for meeting in meetings%}
+            <div class="col-md-4">
+                <div class="meeting-card">
+                    <h1>Meeting</h1>
+                    <p>{{meetings[meeting][0]}}</p>
+                    <h1>At</h1>
+                    <p>{{meetings[meeting][1]}}, {{meetings[meeting][2]}}</p>
+                </div>
+            </div>
+        {%endfor%}
+    </div>
 {%endblock%}

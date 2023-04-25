@@ -50,9 +50,20 @@ def sign_up():
 @app.route("/meetings", methods=["GET", "POST"])
 def meetings():
     if request.method == "GET" and session["role"] == "student":
-        return render_template("student_meetings.html")
+        dict = {}
+        meetings = db_session.query(Meeting).where(Meeting.student_id == session["id"]).all()
+        for meeting in meetings:
+            teacher = db_session.query(Teacher).where(Teacher.id == meeting.teacher_id).first()
+            dict[meeting] = [teacher, meeting.date, meeting.time]
+        return render_template("student_meetings.html", meetings=dict)
     elif request.method == "GET" and session["role"] == "teacher":
-        return render_template("teacher_meetings.html")
+        dict = {}
+        meetings = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.student_id != None)).all()
+        print(meetings)
+        for meeting in meetings:
+            student = db_session.query(Student).where(Student.id == meeting.student_id).first()
+            dict[meeting] = [student, meeting.date, meeting.time]
+        return render_template("teacher_meetings.html", meetings=dict)
     
 @app.route("/availble", methods=["GET", "POST"])
 def availble():
@@ -69,6 +80,33 @@ def availble():
 def schedule():
     if request.method == "GET":
         return render_template("schedule_options.html", teachers=db_session.query(Teacher).all())
+    else:
+        return redirect(url_for("times",teacher=request.form["teacher_id"]))
+    
+
+@app.route("/times/<teacher>", methods=["GET", "POST"])
+def times(teacher):
+    if request.method == "GET":
+        dict = {}
+        meetings = db_session.query(Meeting).where((Meeting.teacher_id == teacher)).order_by(Meeting.date.asc()).all()
+        for meeting in meetings:
+            availble = []
+            times = db_session.query(Meeting).where((Meeting.teacher_id == teacher) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).all()
+            for time in times:
+                availble.append(time)
+            dict[meeting.date] = availble
+        
+        return render_template("meeting_times.html",dates=dict,teacher=teacher)
+    else:
+        meeting = db_session.query(Meeting).where(Meeting.id == request.form["meeting_id"]).first()
+        meeting.student_id = session["id"]
+        meeting.description = request.form["description"]
+        db_session.commit()
+        return redirect(url_for("meetings"))
+
+
+
+    
 
 
     
