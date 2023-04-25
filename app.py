@@ -32,11 +32,11 @@ def sign_up():
     if request.method == "GET":
         return render_template("sign_up.html") 
     else:
-        if db_session.query(Student).where((Student.email == request.form["email"]) & (Student.password == request.form["password"])).first() is not None:
-            flash("This User Already Exists! Try again")
+        if db_session.query(Student).where(Student.email == request.form["email"]).first() is not None:
+            flash("This Email is Already Taken! Try again", )
             return render_template("sign_up.html")
         elif request.form["password"] != request.form["confirm"]:
-            flash("Passwords Do Not Match! Try again")
+            flash("Passwords Do Not Match! Try again", "error")
             return render_template("sign_up.html")
         session["role"] = "student"
         db_session.add(Student(request.form["fname"], request.form["lname"], request.form["email"], request.form["password"]))
@@ -50,7 +50,28 @@ def sign_up():
 @app.route("/meetings", methods=["GET", "POST"])
 def meetings():
     if request.method == "GET" and session["role"] == "student":
-        return render_template("student-meetings.html")
+        return render_template("student_meetings.html")
+    elif request.method == "GET" and session["role"] == "teacher":
+        return render_template("teacher_meetings.html")
+    
+@app.route("/availble", methods=["GET", "POST"])
+def availble():
+    if request.method == "GET":
+        return render_template("availble.html")
+    else:
+        time = request.form["time"] + " " + request.form["indicator"]
+        db_session.add(Meeting(request.form["date"], time, session["id"]))
+        db_session.commit()
+        flash("Meeting Time Successfully Submitted!", "info")
+        return render_template("availble.html")
+
+@app.route("/scheduling", methods=["GET", "POST"])
+def schedule():
+    if request.method == "GET":
+        return render_template("schedule_options.html", teachers=db_session.query(Teacher).all())
+
+
+    
     
 
 @app.before_first_request

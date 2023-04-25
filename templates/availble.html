@@ -1,0 +1,44 @@
+{%extends "teacher_base.html"%}
+{%block title%}Availability{%endblock%}
+{%block head%}Enter Availble Times{%endblock%}
+{%block content%}
+    <form action="#" method="POST">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="text" id="date" name="date" placeholder="mm/dd" required>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label for="time">Time:</label>
+                    <input type="text" id="time" name="time" placeholder="hh:mm" required>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label for="indicator">Which Time:</label>
+                    <select type="text" id ="indicator" name="indicator">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- #TODO ASK HOW TO MAKE INDICATE ANOTHER POST, MAYBE A WAIT-->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                    <p class="text-center">{{msg}}</p>
+                {% endfor %}
+            {% endif %}
+        {%  endwith %}
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <button type="submit" class="btn">Submit</button>
+            </div>
+        </div>
+        
+    </form>
+{%endblock%}

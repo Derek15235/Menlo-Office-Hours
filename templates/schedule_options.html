@@ -1,0 +1,19 @@
+{%extends "student_base.html"%}
+{%block title%}Meet Teachers{%endblock%}
+{%block head%}Meet Your Teachers!{%endblock%}
+{%block content%}
+    <form action="#" method="POST">
+        <div class="row">
+            {%for teacher in teachers%}
+                <div class="col-md-4">
+                    <div class="teacher-card">
+                        <img src="{{teacher.img_link}}">
+                        <p>{{teacher}}</p>
+                        <p>{{teacher.department}}<p>
+                        <button type="submit" id="teacher_id" name="teacher_id" value="{{teacher.id}}" class="btn">Schedule a Meeting</button>
+                    </div>
+                </div>
+            {%endfor%}
+        </div>
+    </form>
+{%endblock%}

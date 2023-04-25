@@ -5,7 +5,6 @@
     <h2 class="text-center">Sign In</h2>
     <input type="text" id="email" name="email" placeholder="Email" required>
     <input type="password" id="password" name="password" placeholder="Password" required>
-    <button type="submit">Sign In</button>
     {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for msg in messages %}
@@ -13,5 +12,6 @@
                 {% endfor %}
             {% endif %}
     {%  endwith %}
-    <div class="signup-link">Don't Have an <a href="{{url_for('sign_up')}}"> Sign up Here</a></div>
+    <button type="submit">Sign In</button>
+    <div class="signup-link">New Student to Menlo? <a href="{{url_for('sign_up')}}"> Sign up Here</a></div>
 {%endblock%}
