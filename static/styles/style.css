@@ -1,6 +1,7 @@
 body {
     font-family: 'Arvo';
     font-weight: bold;
+    overflow-x: hidden;
 }
 /* Navbar Styles */
 .navbar-blue {
