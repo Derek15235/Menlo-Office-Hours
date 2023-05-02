@@ -7,13 +7,13 @@
             <div class="col-md-5">
                 <div class="form-group">
                     <label for="date">Date:</label>
-                    <input type="text" id="date" name="date" placeholder="mm/dd" required>
+                    <input type="text" id="date" name="date" placeholder="mm/dd" minlength="5" maxlength="5" required>
                 </div>
             </div>
             <div class="col-md-5">
                 <div class="form-group">
                     <label for="time">Time:</label>
-                    <input type="text" id="time" name="time" placeholder="hh:mm" required>
+                    <input type="text" id="time" name="time" placeholder="hh:mm" minlength="5" maxlength="5" required>
                 </div>
             </div>
             <div class="col-md-2">
@@ -26,7 +26,6 @@
                 </div>
             </div>
         </div>
-        <!-- #TODO ASK HOW TO MAKE INDICATE ANOTHER POST, MAYBE A WAIT-->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for msg in messages %}
@@ -36,9 +35,21 @@
         {%  endwith %}
         <div class="row">
             <div class="col-md-12 text-center">
-                <button type="submit" class="btn">Submit</button>
+                <button type="submit" class="btn">SCHEDULE/CANCEL</button>
             </div>
         </div>
-        
     </form>
+    <div class="row">
+        {% for date in dates %}
+            <div class="col-md-3">
+                <div class="date-card">
+                    <p>{{date}}</p>
+                    {% for meeting in dates[date] %}
+                        <button type="submit" class="btn">{{meeting.time}}</button>
+                    {%endfor%}
+                </div>
+            </div>
+        {%endfor%}
+    </div>
 {%endblock%}
+<!-- {{url_for('cancel', meeting_id = meeting.id, function = 'avaible')}} -->

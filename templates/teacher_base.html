@@ -19,10 +19,9 @@
 
     <body>
         <nav class="navbar navbar-expand-lg navbar-blue sticky-top">
-            <a class="navbar-brand" href="#">
-                <a class="nav-link disabled" href="#"> <img src="{{url_for('static',filename='images/menlo.png')}}" width="50" class="d-inline-block align-top" alt=""></a>
-                <!-- <a class="nav-link disabled" href="#"> <img src="{{url_for('static', filename='images/menlo.png')}}" width="30" height="30" class="d-inline-block align-top" alt=""></a> -->
-                <span class="white-text">Menlo Office Hours</span>
+            <a class="navbar-brand" href="{{url_for('meetings')}}">
+                <a class="nav-link" href="#"> <img src="{{url_for('static',filename='images/menlo.png')}}" width="50" class="d-inline-block align-top" alt=""></a>
+                <a class="no-hover" href="{{url_for('meetings')}}">Menlo Office Hours</a>
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
@@ -41,8 +40,7 @@
                             <a class="nav-link" href="#"> <img src="{{url_for('static',filename='images/pfp.png')}}" width="30" height="30" class="d-inline-block align-top" alt=""></a> 
                         </button>
                         <div class="dropdown-menu dropdown-menu-right">
-                          <a href="{{url_for('sign_in')}}"><button class="dropdown-item" type="button">Sign In</button></a>
-                          <a href="{{url_for('sign_up')}}"><button class="dropdown-item" type="button">Sign up</button></a>
+                            <a href="{{url_for('sign_in')}}"><button class="dropdown-item" type="button">Log Out</button></a>
                         </div>
                       </div>
                 </li>

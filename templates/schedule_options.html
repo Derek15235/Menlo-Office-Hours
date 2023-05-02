@@ -2,10 +2,24 @@
 {%block title%}Meet Teachers{%endblock%}
 {%block head%}Meet Your Teachers!{%endblock%}
 {%block content%}
+    <form method="GET">
+        <div class="row">
+            <div class="col-lg-2 offset-lg-8">
+                <select type="text" id="department" name="department" class="filter">
+                    <option value="All">All</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Math">Math</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="submit" class="btn filter">Filter</button>
+            </div>
+        </div>
+    </form>
     <form action="#" method="POST">
         <div class="row">
             {%for teacher in teachers%}
-                <div class="col-md-4">
+                <div class="col-lg-4">
                     <div class="teacher-card">
                         <img src="{{teacher.img_link}}">
                         <p>{{teacher}}</p>
