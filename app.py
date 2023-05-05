@@ -137,6 +137,7 @@ def availble():
     meetings = teacher.meetings
     if meetings is not None:
         for meeting in meetings:
+            # Make a list of all avalible times for that date and store them in the dictionary
             availble = []
             times = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
             for time in times:
@@ -175,6 +176,7 @@ def times(teacher_id):
         meetings = teacher.meetings
         if meetings is not None:
             for meeting in meetings:
+                # Make a list of all avalible times for that date and store them in the dictionary
                 availble = []
                 times = db_session.query(Meeting).where((Meeting.teacher_id == teacher_id) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
                 for time in times:
@@ -190,11 +192,11 @@ def times(teacher_id):
         meeting.student_id = session["id"]
         meeting.description = request.form["description"]
         db_session.commit()
-        request.form["meeting_id"] = None
         return redirect(url_for("meetings")) 
 
 
 def delete_past_meetings(date):
+    # Query all meetings where the date is in the past and delete from database
     delete = db_session.query(Meeting).where(Meeting.date < date).all()
     for meeting in delete:
         db_session.delete(meeting)
