@@ -43,7 +43,11 @@ def sign_up():
     else:
         # Make sure email is not already taken
         if db_session.query(Student).where(Student.email == request.form["email"]).first() is not None:
-            flash("This Email is Already Taken! Try again", )
+            flash("This Email is Already Taken! Try again", "error")
+            return render_template("sign_up.html")
+        # Make sure email is a menlo email by checking the ending of the email
+        if request.form["email"][-16:] != "@menloschool.org":
+            flash("You must use a Menlo email! Try Again", "error")
             return render_template("sign_up.html")
         # Make sure passwords match
         elif request.form["password"] != request.form["confirm"]:
@@ -63,8 +67,10 @@ def sign_up():
 def meetings():
     if request.method == "GET":
         # Ensure that person had logged in
-        if session["id"] is None:
-                return redirect(url_for("sign_in"))
+        if "id" not in session:
+            return redirect(url_for("sign_in"))
+        # When first landing on the page, delete all past meetings
+        delete_past_meetings(str(datetime.now())[5:10].replace("-", "/"))
     else:
         canceled_meeting = db_session.query(Meeting).where(Meeting.id == request.form["meeting_id"]).first()
         if session["role"] == "student":
@@ -76,16 +82,23 @@ def meetings():
     # Show the meetings the user has schedule
     if session["role"] == "student":
         dict = {}
-        meetings = db_session.query(Meeting).where((Meeting.student_id == session["id"]) & (Meeting.date >= session["date"])).all()
-        for meeting in meetings:
-            teacher = db_session.query(Teacher).where(Teacher.id == meeting.teacher_id).first()
-            dict[meeting] = [teacher, meeting.date, meeting.time, meeting.description]
+        student = db_session.query(Student).where(Student.id == session["id"]).first()
+        student.meetings.sort(key=lambda x: x.date)
+        meetings = student.meetings
+        if meetings is not None:
+            for meeting in meetings:
+                teacher = db_session.query(Teacher).where(Teacher.id == meeting.teacher_id).first()
+                dict[meeting] = [teacher, meeting.date, meeting.time, meeting.description]
         return render_template("student_meetings.html", meetings=dict)
     elif session["role"] == "teacher":
         dict = {}
-        meetings = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.student_id != None) & (Meeting.date >= session["date"])).all()
-        print(meetings)
+        # Show all meetings teacher has with a student, don't show empy ones
+        teacher = db_session.query(Teacher).where(Teacher.id == session["id"]).first()
+        teacher.meetings.sort(key=lambda x: x.date)
+        meetings = teacher.meetings
         for meeting in meetings:
+            if meeting.student_id is None:
+                continue
             student = db_session.query(Student).where(Student.id == meeting.student_id).first()
             dict[meeting] = [student, meeting.date, meeting.time, meeting.description]
         return render_template("teacher_meetings.html", meetings=dict)
@@ -94,38 +107,48 @@ def meetings():
 def availble():
     if request.method == "GET":
         # Ensure that person had logged in
-        if session["id"] is None:
+        if "id" not in session:
             return redirect(url_for("sign_in"))
     else:
         # Create the meeting with the inputted time and the teacher's id
         time = request.form["time"] + " " + request.form["indicator"]
         date = request.form["date"]
-        meeting = db_session.query(Meeting).where((Meeting.time == time) & (Meeting.date == date) & (Meeting.student_id == None) & (Meeting.teacher_id == session["id"])).first()
-        # If the user puts in an already existing time, cancel that meeting, otherwise schedule a new meeting
-        if meeting is not None:
-            db_session.delete(meeting)
-            db_session.commit()
-            flash("Meeting Time Successfully Canceled!")
-        else: 
-            db_session.add(Meeting(request.form["date"], time, session["id"]))
-            db_session.commit()
-            flash("Meeting Time Successfully Submitted!", "info")
+        # Make sure user puts in a present or future date, not past date
+        if date < str(datetime.now())[5:10].replace("-", "/"):
+            flash("Must input a date that is today or beyond today!", "error")
+        else:
+            meeting = db_session.query(Meeting).where((Meeting.time == time) & (Meeting.date == date) & (Meeting.teacher_id == session["id"])).first()
+            # If the user puts in an already existing time, cancel that meeting, otherwise schedule a new meeting
+            if meeting is not None:
+                if meeting.student_id is None:
+                    db_session.delete(meeting)
+                    db_session.commit()
+                    flash("Meeting Time Successfully Canceled!", "info")
+                else:
+                    flash("You have a meeting with a student at this time. Cancel this meeting on the front page!", "error")
+            else: 
+                db_session.add(Meeting(request.form["date"], time, session["id"]))
+                db_session.commit()
+                flash("Meeting Time Successfully Submitted!", "info")
     # Show all empty meetings that are scheduled for future dates
     dict = {}
-    meetings = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.date >= session["date"])).order_by(Meeting.date.asc()).all()
-    for meeting in meetings:
-        availble = []
-        times = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
-        for time in times:
-            availble.append(time)
-        dict[meeting.date] = availble
+    teacher = db_session.query(Teacher).where(Teacher.id == session["id"]).first()
+    teacher.meetings.sort(key=lambda x: x.date)
+    meetings = teacher.meetings
+    if meetings is not None:
+        for meeting in meetings:
+            availble = []
+            times = db_session.query(Meeting).where((Meeting.teacher_id == session["id"]) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
+            for time in times:
+                availble.append(time)
+            dict[meeting.date] = availble
     return render_template("availble.html", dates=dict)
 
 @app.route("/scheduling", methods=["GET", "POST"])
 def schedule():
     if request.method == "GET":
         # Ensure that person had logged in
-        if session["id"] is None:
+        if "id" not in session:
             return redirect(url_for("sign_in"))
         # Filter which teachers are shown, and default is all of them
         department = request.args.get("department")
@@ -136,44 +159,46 @@ def schedule():
         return render_template("schedule_options.html", teachers=selected_teachers)
     else:
         # Redirect to page to finalize scheduling meeting
-        return redirect(url_for("times",teacher=request.form["teacher_id"]))
+        return redirect(url_for("times",teacher_id=request.form["teacher_id"]))
     
 
-@app.route("/times/<teacher>", methods=["GET", "POST"])
-def times(teacher):
+@app.route("/times/<teacher_id>", methods=["GET", "POST"])
+def times(teacher_id):
     if request.method == "GET":
         # Ensure that person had logged in
-        if session["id"] is None:
+        if "id" not in session:
             return redirect(url_for("sign_in"))
-        # Create a dictionary where each (future or current) date has a list of meetings attached to it
+        # Create a dictionary where each date has a list of meetings attached to it
         dict = {}
-        meetings = db_session.query(Meeting).where((Meeting.teacher_id == teacher) & (Meeting.date >= session["date"])).order_by(Meeting.date.asc()).all()
-        for meeting in meetings:
-            availble = []
-            times = db_session.query(Meeting).where((Meeting.teacher_id == teacher) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
-            for time in times:
-                availble.append(time)
-            dict[meeting.date] = availble  
+        teacher = db_session.query(Teacher).where(Teacher.id == teacher_id).first()
+        teacher.meetings.sort(key=lambda x: x.date)
+        meetings = teacher.meetings
+        if meetings is not None:
+            for meeting in meetings:
+                availble = []
+                times = db_session.query(Meeting).where((Meeting.teacher_id == teacher_id) & (Meeting.date == meeting.date) & (Meeting.student_id == None)).order_by(Meeting.time.asc()).all()
+                for time in times:
+                    availble.append(time)
+                dict[meeting.date] = availble  
         return render_template("meeting_times.html",dates=dict,teacher=teacher)
     else:
+        # If the user hits enter without a time slot selected, then reroute
+        if "meeting_id" not in request.form:
+            return redirect(url_for("times", teacher_id = teacher_id))
         # When student selects a time, fill in required fields to attach them to the meeting
         meeting = db_session.query(Meeting).where(Meeting.id == request.form["meeting_id"]).first()
         meeting.student_id = session["id"]
         meeting.description = request.form["description"]
         db_session.commit()
+        request.form["meeting_id"] = None
         return redirect(url_for("meetings")) 
 
-@app.route("/cancel/<meeting_id>/<function>")
-def cancel(meeting_id,function):
-    db_session.delete(db_session.query(Meeting).where(Meeting.id == meeting_id).first())
+
+def delete_past_meetings(date):
+    delete = db_session.query(Meeting).where(Meeting.date < date).all()
+    for meeting in delete:
+        db_session.delete(meeting)
     db_session.commit()
-    return redirect(url_for(function))
-
-
-@app.before_first_request
-def setup():
-    init_db()
-    session["date"] = str(datetime.now())[5:10].replace("-", "/")
     
 
 
