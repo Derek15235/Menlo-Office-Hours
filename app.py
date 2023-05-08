@@ -29,7 +29,6 @@ def sign_in():
             session["role"] = "teacher"
             session["id"] = db_session.query(Teacher).where((Teacher.email == request.form["email"]) & (Teacher.password == request.form["password"])).first().id
             return redirect(url_for("meetings"))
-        
         flash("Incorrect Password or Email! Try Again", "error")
         return render_template("sign_in.html")
         
@@ -72,6 +71,7 @@ def meetings():
         # When first landing on the page, delete all past meetings
         delete_past_meetings(str(datetime.now())[5:10].replace("-", "/"))
     else:
+        # If student wants to cancel, remove the student from the meeting, but if its a teacher delete the entire meeting
         canceled_meeting = db_session.query(Meeting).where(Meeting.id == request.form["meeting_id"]).first()
         if session["role"] == "student":
             canceled_meeting.student_id = None
@@ -103,8 +103,8 @@ def meetings():
             dict[meeting] = [student, meeting.date, meeting.time, meeting.description]
         return render_template("teacher_meetings.html", meetings=dict)
     
-@app.route("/availble", methods=["GET", "POST"])
-def availble():
+@app.route("/available", methods=["GET", "POST"])
+def available():
     if request.method == "GET":
         # Ensure that person had logged in
         if "id" not in session:
@@ -143,7 +143,7 @@ def availble():
             for time in times:
                 availble.append(time)
             dict[meeting.date] = availble
-    return render_template("availble.html", dates=dict)
+    return render_template("available.html", dates=dict)
 
 @app.route("/scheduling", methods=["GET", "POST"])
 def schedule():
@@ -201,10 +201,6 @@ def delete_past_meetings(date):
     for meeting in delete:
         db_session.delete(meeting)
     db_session.commit()
-    
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
-
