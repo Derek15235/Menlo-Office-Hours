@@ -154,9 +154,9 @@ def schedule():
         # Filter which teachers are shown, and default is all of them
         department = request.args.get("department")
         if department is None or department == "All":
-            selected_teachers = db_session.query(Teacher).all()
+            selected_teachers = db_session.query(Teacher).order_by(Teacher.first_name.asc()).all()
         else:
-            selected_teachers = db_session.query(Teacher).where(Teacher.department == department).all()
+            selected_teachers = db_session.query(Teacher).where(Teacher.department == department).order_by(Teacher.first_name.asc()).all()
         return render_template("schedule_options.html", teachers=selected_teachers)
     else:
         # Redirect to page to finalize scheduling meeting
@@ -203,4 +203,4 @@ def delete_past_meetings(date):
     db_session.commit()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="172.16.3.53", port="5001")
